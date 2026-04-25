@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid} (Firebase Auth UID)
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - email: string (required, immutable)
+    //   - displayName: string (optional, mutable)
+    //   - role: string (required, immutable, enum: ['user', 'admin'])
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: users/{uid}/preferences
+    // Document ID: settings
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - savedCareers: list (optional, mutable, max 50)
+    //   - lastUpdated: timestamp (required, mutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() { return request.auth != null; }
+    function isOwner(uid) { return isAuthenticated() && request.auth.uid == uid; }
+    function hasOnlyAllowedFields(fields) { return request.resource.data.keys().hasOnly(fields); }
+    function isValidEmail(email) { return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"); }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'role', 'createdAt']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['user', 'admin'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidPreferences(data) {
+      return hasOnlyAllowedFields(['uid', 'savedCareers', 'lastUpdated']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             (!('savedCareers' in data) || (data.savedCareers is list && data.savedCareers.size() <= 50)) &&
+             data.lastUpdated is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if isOwner(uid) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role;
+
+      match /preferences/settings {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && isValidPreferences(request.resource.data);
+        allow update: if isOwner(uid) && isValidPreferences(request.resource.data);
+      }
+    }
+  }
+}

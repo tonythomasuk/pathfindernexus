@@ -1,0 +1,21 @@
+{
+  "name": "A-level and Beyond",
+  "short_name": "A-level Beyond",
+  "description": "Explore your future with A-level choices and university pathways.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/future/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/future/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
