@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { PrintPreview } from './PrintPreview';
@@ -133,6 +132,9 @@ export const Footer: React.FC = () => {
                         <p className="text-[10px] text-white/20 uppercase tracking-widest">
                             © {new Date().getFullYear()} • Experimental AI Application
                         </p>
+                    </div>
+                    <div className="mt-4 text-center">
+                        <p className="text-[10px] text-white/20">Built using Claude by Anthropic</p>
                     </div>
                 </div>
             </footer>
