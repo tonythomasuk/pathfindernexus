@@ -10,14 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@google/genai": "^1.28.0",
+    "@anthropic-ai/sdk": "^0.39.0",
     "@sentry/node": "^10.47.0",
     "@sentry/profiling-node": "^10.47.0",
     "@sentry/react": "^10.47.0",
     "@tailwindcss/vite": "^4.2.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
-    "firebase": "^12.11.0",
     "lucide-react": "^0.577.0",
     "marked": "^16.4.1",
     "motion": "^12.35.2",
