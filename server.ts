@@ -77,7 +77,6 @@ async function startServer() {
 
   const anthropic = new Anthropic({ apiKey: apiKey ?? "" });
 
-  // Model to use across all endpoints
   const MODEL = "claude-sonnet-4-6";
 
   // System prompt that enforces JSON-only responses
@@ -86,6 +85,8 @@ async function startServer() {
     "Do not include markdown code fences, explanations, or any text outside the JSON.";
 
   // ── Endpoint 1: generate-initial-analysis ──────────────────────────────────
+  // Heavy endpoint: returns futureStory + popularCareers (8-10 items) + earningPotential.
+  // Needs high max_tokens — responses regularly exceed 6000 tokens.
   app.post("/api/generate-initial-analysis", async (req, res) => {
     const { subjects } = req.body;
     if (!subjects || !Array.isArray(subjects)) {
@@ -135,7 +136,7 @@ Ensure all markdown string fields are formatted for readability with paragraphs,
     try {
       const response = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 4096,
+        max_tokens: 16000,
         system: JSON_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       });
@@ -154,30 +155,11 @@ Ensure all markdown string fields are formatted for readability with paragraphs,
     }
 
     const COMMON_A_LEVEL_SUBJECTS = [
-      "Mathematics",
-      "Further Mathematics",
-      "Physics",
-      "Chemistry",
-      "Biology",
-      "Computer Science",
-      "English Literature",
-      "English Language",
-      "History",
-      "Geography",
-      "Economics",
-      "Psychology",
-      "Sociology",
-      "Religious Studies",
-      "Philosophy",
-      "Art and Design",
-      "Music",
-      "Drama",
-      "French",
-      "German",
-      "Spanish",
-      "Business Studies",
-      "Accounting",
-      "Politics",
+      "Mathematics", "Further Mathematics", "Physics", "Chemistry", "Biology",
+      "Computer Science", "English Literature", "English Language", "History",
+      "Geography", "Economics", "Psychology", "Sociology", "Religious Studies",
+      "Philosophy", "Art and Design", "Music", "Drama", "French", "German",
+      "Spanish", "Business Studies", "Accounting", "Politics",
     ];
 
     const prompt = `
@@ -210,6 +192,8 @@ Return your response as a JSON object with this exact structure:
   });
 
   // ── Endpoint 3: generate-builder-courses ───────────────────────────────────
+  // Heavy endpoint: returns up to 10 course objects with full details.
+  // Needs high max_tokens to avoid truncation.
   app.post("/api/generate-builder-courses", async (req, res) => {
     const { major, minors, targetUniversities } = req.body;
 
@@ -255,7 +239,7 @@ Return your response as a JSON array with this exact structure:
     try {
       const response = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 4096,
+        max_tokens: 8192,
         system: JSON_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       });
@@ -267,6 +251,7 @@ Return your response as a JSON array with this exact structure:
   });
 
   // ── Endpoint 4: generate-university-courses ────────────────────────────────
+  // Heavy endpoint: returns up to 5 detailed course match objects.
   app.post("/api/generate-university-courses", async (req, res) => {
     const { subjects, university } = req.body;
 
@@ -306,7 +291,7 @@ Return your response as a JSON array with this exact structure:
     try {
       const response = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 4096,
+        max_tokens: 8192,
         system: JSON_SYSTEM,
         messages: [{ role: "user", content: prompt }],
       });
@@ -332,7 +317,6 @@ Return your response as plain text (the story itself, not wrapped in JSON).
 `;
 
     try {
-      // This endpoint returns plain text, not JSON — use a plain system prompt
       const response = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 1024,
